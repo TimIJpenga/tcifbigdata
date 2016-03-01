@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LetterTabel</title>
+    <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <script src="app.js"></script>
+</head>
+<body>
+
+<div ng-app="bigData" ng-controller="controller">
+    <div>
+        <h1>Letter Tabel - Alice in Wonderland</h1>
+
+        <table>
+            <td></td>
+            <td ng-repeat="col in abc">{{ col }}</td>
+            <tr ng-repeat="row in abc">
+                <td>{{ row }}</td>
+            </tr>
+        </table>
+
+        <!--<table>-->
+            <!--<tr>-->
+
+            <!--</tr>-->
+            <!--<tr ng-repeat="row in data">-->
+                <!--<th>{{row.letter}}</th>-->
+
+                <!--<td ng-repeat="cell in row">-->
+                    <!--{{cell}} ({{$index}},{{$parent.$index}})-->
+                <!--</td>-->
+            <!--</tr>-->
+        <!--</table>-->
+    </div>
+    <!--<p>Name : <input type="text" ng-model="name" placeholder="Enter name here"></p>-->
+
+</div>
+
+<style>
+    table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 5px;
+        text-align: left;
+    }
+</style>
+
+</body>
+</html>
