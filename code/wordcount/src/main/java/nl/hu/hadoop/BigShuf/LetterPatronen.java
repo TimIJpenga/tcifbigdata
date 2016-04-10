@@ -1,5 +1,6 @@
-package main.java.nl.hu.hadoop;
+package main.java.nl.hu.hadoop.BigShuf;
 
+import main.java.nl.hu.hadoop.WordCount;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
