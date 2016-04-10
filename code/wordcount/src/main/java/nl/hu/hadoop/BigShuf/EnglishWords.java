@@ -6,11 +6,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class EnglishWords {
 
@@ -35,11 +31,15 @@ public class EnglishWords {
 
 //        System.out.println(predict("Pluisje"));
         Analyzer analyzer = new Analyzer();
-        System.out.println(analyzer.calculateLetterAverage("Pluisje", 0.0));
-        System.err.println(analyzer.ComplexPredict("floepsie"));
-        System.err.println(analyzer.ComplexPredict("train"));
-        System.err.println(analyzer.ComplexPredict("work"));
-        System.err.println(analyzer.ComplexPredict("he"));
+//        System.out.println(analyzer.calculateLetterAverage("Pluisje", 0.0));
+//        System.err.println(analyzer.letterFrequency("floepsie"));
+//        System.err.println(analyzer.letterFrequency("train"));
+//        System.err.println(analyzer.letterFrequency("work"));
+//        System.err.println(analyzer.letterFrequency("he"));
+        System.err.println(analyzer.wordSizeAverageLength("a"));
+        System.err.println(analyzer.wordSizeAverageLength("jfdd"));
+        System.err.println(analyzer.wordSizeAverageLength("jfddgdf"));
+        System.err.println(analyzer.wordSizeAverageLength("jfddgdfgfdhfd"));
     }
 
 }
