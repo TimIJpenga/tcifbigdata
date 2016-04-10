@@ -22,6 +22,46 @@ public class Analyzer {
         return 0.0;
     }
 
+
+    // FEATURE 1
+
+    public static Double letterFrequency(String word) {
+
+        Double divisors = 0.0;
+        Double sum = 0.0;
+        for (int i = 0; i < word.length(); i++) {
+
+            try {
+
+                Integer letterFrequency = letterPatterns.get(word.charAt(i) + "" + word.charAt(i + 1));
+                if (letterFrequency == null) {
+                    sum += 0.0;
+                } else {
+                    sum += (double) letterFrequency / highest * 2;
+                }
+
+            } catch (StringIndexOutOfBoundsException e) {}
+            divisors++;
+        }
+
+        return sum / divisors;
+    }
+
+    // FEATURE 2
+
+    public static Double wordSizeAverageLength(String word) {
+
+        int wordSize = word.length();
+        int wordSizeAverage = readWordSizeAverageResults();
+        int difference = wordSize - wordSizeAverage;
+        if (difference < 0) difference = Math.abs(difference);
+
+        Double chance = 1 - (difference * 0.18);
+        if (chance > 1 || chance < 0) return 0.0;
+        else return chance;
+    }
+
+
     public static Double calculateLetterAverage(String word, Double chance) {
         Double difference = word.length() - 5.0;
         if (difference < 0) {
@@ -33,35 +73,6 @@ public class Analyzer {
             System.out.println(chance);
         }
         return chance;
-    }
-
-
-    public static Double ComplexPredict(String word) {
-
-        Double divisors = 0.0;
-        Double sum = 0.0;
-        for (int i = 0; i < word.length(); i++) {
-
-            try {
-                sum += calculateChanceofLetterSequence(word.charAt(i), word.charAt(i + 1));
-            } catch (StringIndexOutOfBoundsException e) {
-//                throw e;
-            }
-            divisors++;
-        }
-
-        return sum / divisors;
-    }
-
-    public static Double calculateChanceofLetterSequence(char first, char second) {
-
-        Integer events = letterPatterns.get(first + "" + second);
-
-        if (events == null) {
-            return 0.0;
-        }
-        return (double) events / highest * 2;
-
     }
 
     private static Map<String, Integer> readLetterPatternResults() {
@@ -90,6 +101,22 @@ public class Analyzer {
         } catch (IOException e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    private static int readWordSizeAverageResults() {
+
+        String fileName = "result/word_size_average/part-r-00000";
+
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            String line = br.readLine();
+            String[] split = line.split("\\s");
+
+            return Integer.parseInt(split[1]);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 0;
         }
     }
 }
