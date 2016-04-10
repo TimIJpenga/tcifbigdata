@@ -2,10 +2,12 @@ package main.java.nl.hu.hadoop.BigShuf;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -13,55 +15,50 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import java.io.File;
 import java.io.IOException;
 
-public class EnglishWords {
-
-    public static Analyzer analyzer = new Analyzer();
+public class LetterCount {
 
     public static void main(String[] args) throws Exception {
 
-        FileUtils.deleteDirectory(new File("result/english_words"));
+        FileUtils.deleteDirectory(new File("result/lettercount"));
 
         Job job = new Job();
-        job.setJarByClass(EnglishWords.class);
+        job.setJarByClass(LetterCount.class);
 
         FileInputFormat.addInputPath(job, new Path(args[0]));
         FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
-        job.setMapperClass(EnglishWordsMapper.class);
+        job.setMapperClass(LetterCountMapper.class);
+//        job.setCombinerClass(WordCountReducer.class);
+        job.setReducerClass(LetterCountReducer.class);
         job.setInputFormatClass(TextInputFormat.class);
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
 
         job.waitForCompletion(true);
-
     }
-
 }
 
-class EnglishWordsMapper extends Mapper<LongWritable, Text, Text, Text> {
+class LetterCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
 
     public void map(LongWritable Key, Text value, Context context) throws IOException, InterruptedException {
-
-        String[] words = value.toString().split("\\s");
-        if(words.length < 2) return;
-
-        double totalChance = 0.0;
-        int sentenceLength = 0;
-
-        for (String s : words) {
+        String[] tokens = value.toString().split("\\s");
+        for (String s : tokens) {
             s = s.replaceAll("[^\\p{Alpha}]+","");
             s = s.toLowerCase();
-
-            if(!s.equals("") && !s.equals(" ") && s != null) {
-                totalChance += EnglishWords.analyzer.predict(s);
-                sentenceLength++;
+            char[] letters = s.toCharArray();
+            for (char c : letters) {
+                context.write(new Text(c + ""), new IntWritable(1));
             }
         }
-
-        System.out.println(totalChance / sentenceLength);
-        if((totalChance / sentenceLength) < .45) {
-            context.write(new Text("This sentence is very suspicious:"), new Text(value));
-        }
     }
+}
 
+class LetterCountReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+    public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+        int sum = 0;
+        for (IntWritable i : values) {
+            sum += i.get();
+        }
+        context.write(key, new IntWritable(sum));
+    }
 }

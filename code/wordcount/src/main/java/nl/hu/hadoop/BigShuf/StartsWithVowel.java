@@ -1,5 +1,6 @@
-package main.java.nl.hu.hadoop;
+package main.java.nl.hu.hadoop.BigShuf;
 
+import main.java.nl.hu.hadoop.WordCount;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -11,24 +12,26 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 
-public class WordSizeAverage {
+import static main.java.nl.hu.hadoop.BigShuf.StartsWithVowel.VOWELS;
 
-    public static JSONArray results;
+public class StartsWithVowel {
+
+    public static final ArrayList<Character> VOWELS = new ArrayList<Character>() {{
+        add('a');
+        add('e');
+        add('i');
+        add('o');
+        add('u');
+    }};
 
     public static void main(String[] args) throws Exception {
 
-        FileUtils.deleteDirectory(new File("result/word_size_average"));
-        results = new JSONArray();
-        JSONObject resultObject = new JSONObject();
-        resultObject.put("result", results);
+        FileUtils.deleteDirectory(new File("result/starts_with_vowel"));
 
         Job job = new Job();
         job.setJarByClass(WordCount.class);
@@ -36,8 +39,8 @@ public class WordSizeAverage {
         FileInputFormat.addInputPath(job, new Path(args[0]));
         FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
-        job.setMapperClass(WordSizeAverageMapper.class);
-        job.setReducerClass(WordSizeAverageReducer.class);
+        job.setMapperClass(StartsWithVowelMapper.class);
+        job.setReducerClass(StartsWithVowelReducer.class);
         job.setInputFormatClass(TextInputFormat.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
@@ -47,7 +50,7 @@ public class WordSizeAverage {
     }
 }
 
-class WordSizeAverageMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
+class StartsWithVowelMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
 
     public void map(LongWritable Key, Text value, Context context) throws IOException, InterruptedException {
         String[] words = value.toString().split("\\s");
@@ -57,23 +60,24 @@ class WordSizeAverageMapper extends Mapper<LongWritable, Text, Text, IntWritable
             s = s.toLowerCase();
 
             if(!s.equals("") && !s.equals(null)) {
-                context.write(new Text("Average"), new IntWritable(s.length()));
+                if(VOWELS.contains(s.charAt(0))){
+                    context.write(new Text("ISVOWEL"), new IntWritable(1));
+                } else {
+                    context.write(new Text("ISNOTVOWEL"), new IntWritable(1));
+                }
             }
         }
     }
 }
 
-class WordSizeAverageReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+class StartsWithVowelReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
     public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
         int sum = 0;
-        int index = 0;
         for (IntWritable i : values) {
             sum += i.get();
-            index++;
         }
 
-        int average = sum / index;
-        context.write(new Text(key), new IntWritable(average));
+        context.write(new Text(key), new IntWritable(sum));
     }
 
 }

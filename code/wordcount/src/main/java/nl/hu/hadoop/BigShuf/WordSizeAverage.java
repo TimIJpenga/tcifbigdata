@@ -1,67 +1,73 @@
 package main.java.nl.hu.hadoop.BigShuf;
 
+import main.java.nl.hu.hadoop.WordCount;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
 
-public class EnglishWords {
-
-    public static Analyzer analyzer = new Analyzer();
+public class WordSizeAverage {
 
     public static void main(String[] args) throws Exception {
 
-        FileUtils.deleteDirectory(new File("result/english_words"));
+        FileUtils.deleteDirectory(new File("result/word_size_average"));
 
         Job job = new Job();
-        job.setJarByClass(EnglishWords.class);
+        job.setJarByClass(WordCount.class);
 
         FileInputFormat.addInputPath(job, new Path(args[0]));
         FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
-        job.setMapperClass(EnglishWordsMapper.class);
+        job.setMapperClass(WordSizeAverageMapper.class);
+        job.setReducerClass(WordSizeAverageReducer.class);
         job.setInputFormatClass(TextInputFormat.class);
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
 
         job.waitForCompletion(true);
 
     }
-
 }
 
-class EnglishWordsMapper extends Mapper<LongWritable, Text, Text, Text> {
+class WordSizeAverageMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
 
     public void map(LongWritable Key, Text value, Context context) throws IOException, InterruptedException {
-
         String[] words = value.toString().split("\\s");
-        if(words.length < 2) return;
-
-        double totalChance = 0.0;
-        int sentenceLength = 0;
 
         for (String s : words) {
             s = s.replaceAll("[^\\p{Alpha}]+","");
             s = s.toLowerCase();
 
-            if(!s.equals("") && !s.equals(" ") && s != null) {
-                totalChance += EnglishWords.analyzer.predict(s);
-                sentenceLength++;
+            if(!s.equals("") && !s.equals(null)) {
+                context.write(new Text("Average"), new IntWritable(s.length()));
             }
         }
+    }
+}
 
-        System.out.println(totalChance / sentenceLength);
-        if((totalChance / sentenceLength) < .45) {
-            context.write(new Text("This sentence is very suspicious:"), new Text(value));
+class WordSizeAverageReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+    public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+        int sum = 0;
+        int index = 0;
+        for (IntWritable i : values) {
+            sum += i.get();
+            index++;
         }
+
+        int average = sum / index;
+        context.write(new Text(key), new IntWritable(average));
     }
 
 }
